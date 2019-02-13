@@ -18,8 +18,10 @@
 
 package org.apache.cordova.geolocation;
 
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.Manifest;
+import android.location.LocationManager;
 import android.os.Build;
 
 import org.apache.cordova.CallbackContext;
@@ -40,10 +42,24 @@ public class Geolocation extends CordovaPlugin {
 
     String [] permissions = { Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION };
 
+    private LocationManager locationManager;
 
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         LOG.d(TAG, "We are entering execute");
         context = callbackContext;
+
+        locationManager = (LocationManager) cordova.getActivity().getSystemService(Context.LOCATION_SERVICE);
+
+        if(isGpsDisabled())
+        {
+            LOG.d(TAG, "Location services are disabled!");
+            PluginResult r = new PluginResult(
+                PluginResult.Status.ILLEGAL_ACCESS_EXCEPTION, "Location services are disabled."
+            );
+            context.sendPluginResult(r);
+            return false;
+        }
+
         if(action.equals("getPermission"))
         {
             if(hasPermisssion())
@@ -70,7 +86,7 @@ public class Geolocation extends CordovaPlugin {
             for (int r : grantResults) {
                 if (r == PackageManager.PERMISSION_DENIED) {
                     LOG.d(TAG, "Permission Denied!");
-                    result = new PluginResult(PluginResult.Status.ILLEGAL_ACCESS_EXCEPTION);
+                    result = new PluginResult(PluginResult.Status.ILLEGAL_ACCESS_EXCEPTION, "Permission Denied!");
                     context.sendPluginResult(result);
                     return;
                 }
@@ -102,6 +118,15 @@ public class Geolocation extends CordovaPlugin {
         PermissionHelper.requestPermissions(this, requestCode, permissions);
     }
 
-
-
+    private boolean isGpsDisabled()
+    {
+        try
+        {
+            return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        }
+        catch (Exception ex)
+        {
+            return false;
+        }
+    }
 }
