@@ -122,11 +122,11 @@ public class Geolocation extends CordovaPlugin {
     {
         try
         {
-            return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            return !locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
         }
         catch (Exception ex)
         {
-            return false;
+            return true;
         }
     }
 }
